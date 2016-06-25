@@ -13,24 +13,24 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/sysid/tw"
-	//. "github.com/thomas/tw/basic"
-	"gopkg.in/caarlos0/env.v2"
+	//. "github.com/sysid/tw/basic"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 ////}}}
 
 //// Variables/Constants {{{
 var (
-	debug = func(v ...interface{}) {}
-	dbg   bool
+	debug    = func(v ...interface{}) {}
+	filePath = kingpin.Flag("filepath", "path to config file").Required().Envar("twJUMPLIST").Short('f').ExistingFile()
+	sKeys    = kingpin.Flag("skeys", "Show keys").Short('s').Bool() //for bash completion
+	key      = kingpin.Arg("key", "key to identify path").String()
 )
-
-type config struct {
-	JumpList string `env:"twJUMPLIST"`
-}
 
 ////}}}
 
@@ -40,16 +40,19 @@ func check(e error) {
 		panic(e)
 	}
 }
-func printDirs(g map[string]string) {
+func printDirs(g map[string]string, sKeys bool) {
 	var keys []string
 	for k, _ := range g {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	// To perform the opertion you want
 	for _, k := range keys {
-		fmt.Fprintf(os.Stderr, "%-10s%s\n", k, g[k])
+		if sKeys {
+			fmt.Fprintf(os.Stdout, "%s\n", k)
+		} else {
+			fmt.Fprintf(os.Stderr, "%-10s%s\n", k, g[k])
+		}
 	}
 }
 
@@ -60,21 +63,9 @@ func main() {
 	defer tw.HandleExit()
 	//defer tw.End(time.Now())
 
-	cfg := config{}
-	env.Parse(&cfg)
+	kingpin.Parse()
 
-	if cfg.JumpList == "" {
-		fmt.Fprintf(os.Stderr, "Error: Environmentvariable $twJUMPLIST not set.\n")
-		os.Exit(1)
-	}
-	if !tw.Exists(cfg.JumpList) {
-		fmt.Fprintf(os.Stderr, "%s does not exist.\n", cfg.JumpList)
-		os.Exit(1)
-	}
-
-	//cfg.JumpList := "/Users/q187392/dev/go/src/github.com/thomas/g"
-
-	csvfile, err := os.Open(cfg.JumpList)
+	csvfile, err := os.Open(*filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Configfile: %s\n", err.Error())
 		os.Exit(1)
@@ -91,26 +82,39 @@ func main() {
 	//g []map[string]string
 	g := make(map[string]string)
 
-	// sanity check, display to standard output
+	// read into map
 	for _, v := range rawCSVdata {
-		g[v[0]] = v[1]
+
+		// parse environment varialbes in CSV file
+		pathTokens := strings.Split(v[1], "/")
+		for i, pathToken := range pathTokens {
+			nameTokens := strings.Split(pathToken, ".")
+			for j, nameToken := range nameTokens {
+				if strings.Contains(nameToken, "$") {
+					envVar := os.Getenv(nameToken[1:])
+					if envVar == "" {
+						fmt.Fprintf(os.Stderr, "Variable: %s does not exist.\nFix config: %s\n", nameTokens[j], *filePath)
+						os.Exit(1)
+					}
+					nameTokens[j] = envVar
+				}
+			}
+			pathTokens[i] = strings.Join(nameTokens, ".")
+		}
+		g[v[0]] = filepath.Join(pathTokens...)
 	}
 
-	if len(os.Args) > 2 || len(os.Args) == 1 {
-		printDirs(g)
-		os.Exit(1)
-	}
-
-	if v, ok := g[os.Args[1]]; ok {
+	if v, ok := g[*key]; ok {
+		//check whether jumppath exists
 		if !tw.Exists(v) {
-			fmt.Fprintf(os.Stderr, "%s does not exist.\nFix config: %s\n", v, cfg.JumpList)
+			fmt.Fprintf(os.Stderr, "%s does not exist.\nFix config: %s\n", v, *filePath)
 			os.Exit(1)
 		} else {
 			fmt.Printf("%s\n", v)
 			os.Exit(0)
 		}
 	} else {
-		printDirs(g)
+		printDirs(g, *sKeys)
 		os.Exit(1)
 	}
 }
