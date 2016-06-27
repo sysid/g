@@ -73,7 +73,8 @@ func main() {
 	defer csvfile.Close()
 
 	reader := csv.NewReader(csvfile)
-	reader.FieldsPerRecord = -1 // see the Reader struct information below
+	reader.FieldsPerRecord = -1    // see the Reader struct information below
+	reader.TrimLeadingSpace = true // see the Reader struct information below
 	reader.Comment = '#'
 
 	rawCSVdata, err := reader.ReadAll()
@@ -86,10 +87,13 @@ func main() {
 	for _, v := range rawCSVdata {
 
 		// parse environment varialbes in CSV file
-		pathTokens := strings.Split(v[1], "/")
+		pathSeparator := fmt.Sprintf("%c", os.PathSeparator)
+		pathTokens := strings.Split(v[1], pathSeparator)
+		//Yellow("%v", pathTokens)
 		for i, pathToken := range pathTokens {
-			nameTokens := strings.Split(pathToken, ".")
+			nameTokens := strings.Split(strings.TrimSpace(pathToken), ".")
 			for j, nameToken := range nameTokens {
+				nameToken = strings.TrimSpace(nameToken)
 				if strings.Contains(nameToken, "$") {
 					envVar := os.Getenv(nameToken[1:])
 					if envVar == "" {
@@ -101,7 +105,10 @@ func main() {
 			}
 			pathTokens[i] = strings.Join(nameTokens, ".")
 		}
-		g[v[0]] = filepath.Join(pathTokens...)
+		if g[v[0]] = filepath.Join(pathTokens...); !strings.HasPrefix(g[v[0]], pathSeparator) {
+			g[v[0]] = filepath.Join(pathSeparator, g[v[0]])
+		}
+		//Green("%v", g[v[0]])
 	}
 
 	if v, ok := g[*key]; ok {

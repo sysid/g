@@ -32,7 +32,13 @@ EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
 e () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
-        e1 $file
+        e1 $file # put your prefered editor here
+    fi
+}
+ee () {
+    file=$($GOBIN/g -f $EditList $1)
+    if [ $? -eq 0 ]; then
+        e11 $file # put your prefered editor here
     fi
 }
 
@@ -49,3 +55,30 @@ _e()
   return 0
 }
 complete -o nospace -F _e e
+complete -o nospace -F _e ee
+
+
+################################################################################
+# Open files with OSX Standard Application
+################################################################################
+OpenList="${HOME}/dev/cfg/g/$(hostname).open.csv"
+o () {
+    file=$($GOBIN/g -f $OpenList $1)
+    if [ $? -eq 0 ]; then
+        open $file
+    fi
+}
+
+# Bash Automcompletion
+_o()
+{
+  _script_commands=$($GOBIN/g -s -f $OpenList $1)
+
+  local cur prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "${_script_commands}" -- ${cur}) )
+
+  return 0
+}
+complete -o nospace -F _o o
