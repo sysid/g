@@ -1,7 +1,11 @@
 // vim: fdm=marker ts=4 sts=4 sw=4 fdl=0
+//
 // g jumps to the location according to its config-file defined in environment variable $twJUMPLIST.
 // The twJUMPLIST file is CSV format with key,jumppath entries.
-// When key is found with valid path g returns 0, else 1, i.e. when 0 then shell has got a valid path
+//
+// Return Values:
+// When key is found with valid path g returns 0, else 1
+// Specifically: when $?=0 then shell has got a valid path
 //
 // # JumpList_Example.csv
 // h,/usr/home/foo
@@ -73,7 +77,8 @@ func main() {
 	defer csvfile.Close()
 
 	reader := csv.NewReader(csvfile)
-	reader.FieldsPerRecord = -1    // see the Reader struct information below
+	reader.FieldsPerRecord = -1 // see the Reader struct information below
+	//reader.FieldsPerRecord = 2     // see the Reader struct information below
 	reader.TrimLeadingSpace = true // see the Reader struct information below
 	reader.Comment = '#'
 
@@ -88,7 +93,7 @@ func main() {
 		//Debug(":%s:", v[1])
 		g[v[0]] = filepath.Clean(os.ExpandEnv(strings.TrimSpace(v[1])))
 	}
-	printDirs(g, *sKeys)
+	//printDirs(g, *sKeys)
 
 	if v, ok := g[*key]; ok {
 		//check whether jumppath exists
