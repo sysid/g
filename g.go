@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/sysid/tw"
-	//. "github.com/sysid/tw/basic"
+	. "github.com/sysid/tw/basic"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -30,18 +30,29 @@ import (
 
 //// Variables/Constants {{{
 var (
-	debug    = func(v ...interface{}) {}
-	filePath = kingpin.Flag("filepath", "path to config file").Required().Envar("twJUMPLIST").Short('f').ExistingFile()
-	sKeys    = kingpin.Flag("skeys", "Show keys").Short('s').Bool() //for bash completion
-	key      = kingpin.Arg("key", "key to identify path").String()
+	dbg = func(v ...interface{}) {}
+	cfg = Cfg{
+		Version: "0.1",
+		Name:    filepath.Base(os.Args[0]),
+	}
 )
+
+////}}}
+
+//// Types and Methods {{{
+type Cfg struct {
+	Name    string
+	Version string
+	Dbg     bool
+}
 
 ////}}}
 
 //// Functions {{{
 func check(e error) {
 	if e != nil {
-		panic(e)
+		fmt.Fprintf(os.Stderr, "E: %s", e)
+		os.Exit(1)
 	}
 }
 func printDirs(g map[string]string, sKeys bool) {
@@ -64,10 +75,21 @@ func printDirs(g map[string]string, sKeys bool) {
 
 //// Main {{{
 func main() {
+	app := kingpin.New(cfg.Name, "G: Jump Utility")
 	defer tw.HandleExit()
 	//defer tw.End(time.Now())
 
-	kingpin.Parse()
+	filePath := app.Flag("filepath", "path to config file").Required().Envar("twJUMPLIST").Short('f').ExistingFile()
+	sKeys := app.Flag("skeys", "Show keys").Short('s').Bool() //for bash completion
+	key := app.Arg("key", "key to identify path").String()
+	app.Flag("debug", "debug").Short('d').Envar("twDbg").BoolVar(&cfg.Dbg)
+	//kingpin.Parse()
+	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	if cfg.Dbg {
+		dbg = Debug2
+	}
+	dbg("filePath=%s, sKeys=%t, key=%s", *filePath, *sKeys, *key)
 
 	csvfile, err := os.Open(*filePath)
 	if err != nil {
@@ -77,20 +99,17 @@ func main() {
 	defer csvfile.Close()
 
 	reader := csv.NewReader(csvfile)
-	reader.FieldsPerRecord = -1 // see the Reader struct information below
-	//reader.FieldsPerRecord = 2     // see the Reader struct information below
+	reader.FieldsPerRecord = -1    // see the Reader struct information below
 	reader.TrimLeadingSpace = true // see the Reader struct information below
 	reader.Comment = '#'
 
 	rawCSVdata, err := reader.ReadAll()
 	check(err)
 
-	//g []map[string]string
 	g := make(map[string]string)
 
 	// read into map
 	for _, v := range rawCSVdata {
-		//Debug(":%s:", v[1])
 		g[v[0]] = filepath.Clean(os.ExpandEnv(strings.TrimSpace(v[1])))
 	}
 	//printDirs(g, *sKeys)
