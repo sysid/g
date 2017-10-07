@@ -32,13 +32,15 @@ EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
 e () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
-        e1 $file # put your prefered editor here
+        qq $file # put your prefered editor here
+        #e1 $file # put your prefered editor here
     fi
 }
 ee () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
-        e11 $file # put your prefered editor here
+        qq e11 $file # put your prefered editor here
+        #e11 $file # put your prefered editor here
     fi
 }
 
@@ -55,7 +57,18 @@ _e()
   return 0
 }
 complete -o nospace -F _e e
-complete -o nospace -F _e ee
+_ee()
+{
+  _script_commands=$($GOBIN/g -s -f $EditList $1)
+
+  local cur prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "${_script_commands}" -- ${cur}) )
+
+  return 0
+}
+complete -o nospace -F _ee ee
 
 
 ################################################################################

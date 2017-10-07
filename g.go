@@ -1,7 +1,11 @@
 // vim: fdm=marker ts=4 sts=4 sw=4 fdl=0
 //
 // g jumps to the location according to its config-file defined in environment variable $twJUMPLIST.
-// The twJUMPLIST file is CSV format with key,jumppath entries.
+//
+// twJUMPLIST file format:
+// CSV format with key,jumppath entries.
+// comment: #
+// if key is not unique, first one will be chosen
 //
 // Return Values:
 // When key is found with valid path g returns 0, else 1
@@ -22,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/sysid/tw"
-	. "github.com/sysid/tw/basic"
+	//. "github.com/sysid/tw/basic"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -49,6 +53,23 @@ type Cfg struct {
 ////}}}
 
 //// Functions {{{
+func getCsv(fp *string) (records [][]string) {
+	csvfile, err := os.Open(*fp)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Configfile: %s\n", err.Error())
+		os.Exit(1)
+	}
+	defer csvfile.Close()
+
+	reader := csv.NewReader(csvfile)
+	reader.FieldsPerRecord = -1    // see the Reader struct information below
+	reader.TrimLeadingSpace = true // see the Reader struct information below
+	reader.Comment = '#'
+
+	rawCSVdata, err := reader.ReadAll()
+	check(err)
+	return rawCSVdata
+}
 func check(e error) {
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "E: %s", e)
@@ -83,28 +104,14 @@ func main() {
 	sKeys := app.Flag("skeys", "Show keys").Short('s').Bool() //for bash completion
 	key := app.Arg("key", "key to identify path").String()
 	app.Flag("debug", "debug").Short('d').Envar("twDbg").BoolVar(&cfg.Dbg)
-	//kingpin.Parse()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if cfg.Dbg {
-		dbg = Debug2
+		//dbg = Debug2
 	}
 	dbg("filePath=%s, sKeys=%t, key=%s", *filePath, *sKeys, *key)
 
-	csvfile, err := os.Open(*filePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Configfile: %s\n", err.Error())
-		os.Exit(1)
-	}
-	defer csvfile.Close()
-
-	reader := csv.NewReader(csvfile)
-	reader.FieldsPerRecord = -1    // see the Reader struct information below
-	reader.TrimLeadingSpace = true // see the Reader struct information below
-	reader.Comment = '#'
-
-	rawCSVdata, err := reader.ReadAll()
-	check(err)
+	rawCSVdata := getCsv(filePath)
 
 	g := make(map[string]string)
 

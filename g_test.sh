@@ -1,3 +1,4 @@
+# vim: fdm=marker ts=4 sts=4 sw=4 fdl=0
 #!/bin/bash
 
 . $HOME/binx/myFunc.x
@@ -9,10 +10,23 @@ openCsv=./test.open.csv
 jumpCsv=./test.jump.csv
 
 tE1 () {
-    printf "____Running tE1: key exists, but 2 entries in CSV\n"
+    printf "____Running tE1: key exists, but 3 row entries in CSV\n"
     #$cmd -f $editCsv
     ref="/Users/q187392/binx/startGo.x"
     got=$(go run g.go -f $editCsv gostart)
+    if [ $got = $ref ]; then
+        Green "Pass: $got"
+    else
+        printf "Expected: %s\n" $ref
+        printf "Got: %s\n" $got
+        Red "NOK"
+    fi
+    return 0
+}
+tE11 () {
+    printf "____Running tE1: key exists 2x.\n"
+    ref="/Users/q187392/binx/startGo.x"
+    got=$(go run g.go -f $editCsv profile)
     if [ $got = $ref ]; then
         Green "Pass: $got"
     else
@@ -96,9 +110,26 @@ tE6 () {
     return 0
 }
 
-tE1
-tE2
-tE3
-tE4
-tE5
-tE6
+#tE1
+#tE2
+#tE3
+#tE4
+#tE5
+#tE6
+
+#### Run {{{
+case "$1" in
+    1)
+        tE1
+        ;;
+    2)
+        tE2
+        ;;
+    11)
+        tE11
+        ;;
+    all|*)
+        tE1; tE2; tE3; tE4; tE5; tE6;
+        ;;
+esac
+####}}}
