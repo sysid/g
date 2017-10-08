@@ -1,8 +1,10 @@
+# vim: fdm=marker ts=4 sts=4 sw=4 fdl=0
 #!/bin/bash
 
 ################################################################################
 # Jump to directory
 ################################################################################
+#### Jumplist {{{
 JumpList="${HOME}/dev/cfg/g/$(hostname).jump.csv"
 g () {
     file=$($GOBIN/g -f $JumpList $1)
@@ -24,23 +26,50 @@ _g()
   return 0
 }
 complete -o nospace -F _g g
+####}}}}
 
 ################################################################################
 # Edit files with standard editor
 ################################################################################
+#### Edit tmux {{{
+EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
+q () {
+    file=$($GOBIN/g -f $EditList $1)
+    if [ $? -eq 0 ]; then
+        #tmux new-window -n $1\; send-keys "oVim $file" "Enter"
+        tmux new-window -n $1 "docker run -ti --rm -v $HOME/dev/vim/oVim:/ext/ -v $HOME:/home/developer/workspace sysid/ovimionated ${file#$HOME/}"
+        #e1 $file # put your prefered editor here
+    fi
+}
+
+# Bash Automcompletion
+_q()
+{
+  _script_commands=$($GOBIN/g -s -f $EditList $1)
+
+  local cur prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "${_script_commands}" -- ${cur}) )
+
+  return 0
+}
+complete -o nospace -F _q q
+
+####}}}}
+
+#### Edit GUI {{{
 EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
 e () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
-        qq $file # put your prefered editor here
-        #e1 $file # put your prefered editor here
+        e1 $file # put your prefered editor here
     fi
 }
 ee () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
-        qq e11 $file # put your prefered editor here
-        #e11 $file # put your prefered editor here
+        e11 $file # put your prefered editor here
     fi
 }
 
@@ -69,11 +98,13 @@ _ee()
   return 0
 }
 complete -o nospace -F _ee ee
+####}}}}
 
 
 ################################################################################
 # Open files with OSX Standard Application
 ################################################################################
+#### Open {{{
 OpenList="${HOME}/dev/cfg/g/$(hostname).open.csv"
 o () {
     file=$($GOBIN/g -f $OpenList $1)
@@ -95,3 +126,4 @@ _o()
   return 0
 }
 complete -o nospace -F _o o
+####}}}}
