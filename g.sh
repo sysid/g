@@ -37,7 +37,7 @@ q () {
     file=$($GOBIN/g -f $EditList $1)
     if [ $? -eq 0 ]; then
         #tmux new-window -n $1\; send-keys "oVim $file" "Enter"
-        tmux new-window -n $1 "docker run -ti --rm -v $HOME/dev/vim/oVim:/ext/ -v $HOME:/home/developer/workspace sysid/ovimionated ${file#$HOME/}"
+        tmux new-window -n $1 "docker run -ti --rm -v $HOME/dev/vim/oVim:/ext/ -v $HOME:/home/dvlpr/mnt sysid/ovimionated ${file#$HOME/}"
         #e1 $file # put your prefered editor here
     fi
 }
