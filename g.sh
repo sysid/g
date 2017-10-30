@@ -1,13 +1,19 @@
 # vim: fdm=marker ts=4 sts=4 sw=4 fdl=0
 #!/bin/bash
 
+if [ $(uname -n) == "twdev" ]; then
+    TW_GBIN="/usr/bin/g"
+else
+    TW_GBIN="$GOBIN/g"
+fi
+
 ################################################################################
 # Jump to directory
 ################################################################################
 #### Jumplist {{{
 JumpList="${HOME}/dev/cfg/g/$(hostname).jump.csv"
 g () {
-    file=$($GOBIN/g -f $JumpList $1)
+    file=$($TW_GBIN -f $JumpList $1)
     if [ $? -eq 0 ]; then
         builtin cd $file
     fi
@@ -16,7 +22,7 @@ g () {
 # Bash Automcompletion: http://askubuntu.com/questions/68175/how-to-create-script-with-auto-complete
 _g()
 {
-  _script_commands=$($GOBIN/g -s -f $JumpList $1)
+  _script_commands=$($TW_GBIN -s -f $JumpList $1)
 
   local cur prev
   COMPREPLY=()
@@ -34,7 +40,7 @@ complete -o nospace -F _g g
 #### Edit tmux {{{
 EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
 q () {
-    file=$($GOBIN/g -f $EditList $1)
+    file=$($TW_GBIN -f $EditList $1)
     if [ $? -eq 0 ]; then
         #tmux new-window -n $1\; send-keys "oVim $file" "Enter"
         tmux new-window -n $1 "docker run -ti --rm -v $HOME/dev/vim/oVim:/ext/ -v $HOME:/home/dvlpr/mnt sysid/ovimionated ${file#$HOME/}"
@@ -45,7 +51,7 @@ q () {
 # Bash Automcompletion
 _q()
 {
-  _script_commands=$($GOBIN/g -s -f $EditList $1)
+  _script_commands=$($TW_GBIN -s -f $EditList $1)
 
   local cur prev
   COMPREPLY=()
@@ -61,13 +67,13 @@ complete -o nospace -F _q q
 #### Edit GUI {{{
 EditList="${HOME}/dev/cfg/g/$(hostname).edit.csv"
 e () {
-    file=$($GOBIN/g -f $EditList $1)
+    file=$($TW_GBIN -f $EditList $1)
     if [ $? -eq 0 ]; then
         e1 $file # put your prefered editor here
     fi
 }
 ee () {
-    file=$($GOBIN/g -f $EditList $1)
+    file=$($TW_GBIN -f $EditList $1)
     if [ $? -eq 0 ]; then
         e11 $file # put your prefered editor here
     fi
@@ -76,7 +82,7 @@ ee () {
 # Bash Automcompletion
 _e()
 {
-  _script_commands=$($GOBIN/g -s -f $EditList $1)
+  _script_commands=$($TW_GBIN -s -f $EditList $1)
 
   local cur prev
   COMPREPLY=()
@@ -88,7 +94,7 @@ _e()
 complete -o nospace -F _e e
 _ee()
 {
-  _script_commands=$($GOBIN/g -s -f $EditList $1)
+  _script_commands=$($TW_GBIN -s -f $EditList $1)
 
   local cur prev
   COMPREPLY=()
@@ -107,7 +113,7 @@ complete -o nospace -F _ee ee
 #### Open {{{
 OpenList="${HOME}/dev/cfg/g/$(hostname).open.csv"
 o () {
-    file=$($GOBIN/g -f $OpenList $1)
+    file=$($TW_GBIN -f $OpenList $1)
     if [ $? -eq 0 ]; then
         open $file
     fi
@@ -116,7 +122,7 @@ o () {
 # Bash Automcompletion
 _o()
 {
-  _script_commands=$($GOBIN/g -s -f $OpenList $1)
+  _script_commands=$($TW_GBIN -s -f $OpenList $1)
 
   local cur prev
   COMPREPLY=()
