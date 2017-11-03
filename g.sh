@@ -4,7 +4,8 @@
 if [ $(uname -n) == "twdev" ]; then
     TW_GBIN="/usr/bin/g"
 else
-    TW_GBIN="$GOBIN/g"
+    #TW_GBIN="$GOBIN/g"
+    TW_GBIN="$HOME/dev/binx/g"
 fi
 
 ################################################################################
