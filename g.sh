@@ -73,6 +73,7 @@ e () {
     file=$($TW_GBIN -f $EditList $1)
     if [ $? -eq 0 ]; then
         e1 $file # put your prefered editor here
+        #vim $file # put your prefered editor here
     fi
 }
 ee () {
