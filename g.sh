@@ -3,6 +3,8 @@
 
 if [ $(uname -n) == "twdev" ]; then
     TW_GBIN="/usr/bin/g"
+elif [ testOSX ]; then
+    TW_GBIN="$GOBIN/g"
 else
     #TW_GBIN="$GOBIN/g"
     TW_GBIN="$HOME/dev/binx/g"

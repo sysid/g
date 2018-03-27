@@ -25,8 +25,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sysid/tw"
-	//. "github.com/sysid/tw/basic"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -48,6 +46,23 @@ type Cfg struct {
 	Name    string
 	Version string
 	Dbg     bool
+}
+
+// in main: panic(tw.Exit{3}) // 3 is the exit code
+type Exit struct{ Code int }
+
+// exit code handler. Usage: defer HandleExit()
+// Recover is only useful inside deferred functions.
+// During normal execution, a call to recover will return nil and have no other effect.
+// If the current goroutine is panicking, a call to recover will capture the value given to panic and resume normal execution.
+// this results in unwinding the stack, so any defered after HandleExit will execute
+func HandleExit() {
+	if e := recover(); e != nil {
+		if exit, ok := e.(Exit); ok == true {
+			os.Exit(exit.Code)
+		}
+		panic(e) // not of type Exit, bubble up
+	}
 }
 
 ////}}}
@@ -78,7 +93,7 @@ func check(e error) {
 }
 func printDirs(g map[string]string, sKeys bool) {
 	var keys []string
-	for k, _ := range g {
+	for k := range g {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -92,12 +107,22 @@ func printDirs(g map[string]string, sKeys bool) {
 	}
 }
 
+// Exists tests whether the named file or directory exists.
+func Exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
 ////}}}
 
 //// Main {{{
 func main() {
 	app := kingpin.New(cfg.Name, "G: Jump Utility")
-	defer tw.HandleExit()
+	defer HandleExit()
 	//defer tw.End(time.Now())
 
 	filePath := app.Flag("filepath", "path to config file").Required().Envar("twJUMPLIST").Short('f').ExistingFile()
@@ -123,7 +148,7 @@ func main() {
 
 	if v, ok := g[*key]; ok {
 		//check whether jumppath exists
-		if !tw.Exists(v) {
+		if !Exists(v) {
 			fmt.Fprintf(os.Stderr, "%s does not exist.\nFix config: %s\n", v, *filePath)
 			os.Exit(1)
 		} else {
