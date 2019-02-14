@@ -1,0 +1,9 @@
+#### Edit List
+web,http://www.google.com
+
+# Bash
+profile,$HOME/.profile
+profile,$HOME/.profile
+profile,$HOME/.bashrc
+profile2,$HOME/.profile, $HOME/binx/install.x
+profile3,$HOME/non_existent

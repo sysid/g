@@ -1,0 +1,7 @@
+tw,$HOME
+binx,$HOME/binx
+go,$HOME/dev/go/src/github.com/thomas
+gom,$HOME/dev/gom/src/github.com/sysid
+dev,$HOME/dev
+cfg,$HOME/dev/cfg
+

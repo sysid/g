@@ -142,13 +142,14 @@ func main() {
 
 	// read into map
 	for _, v := range rawCSVdata {
-		g[v[0]] = filepath.Clean(os.ExpandEnv(strings.TrimSpace(v[1])))
+		//g[v[0]] = filepath.Clean(os.ExpandEnv(strings.TrimSpace(v[1])))  // prevents http://
+		g[v[0]] = os.ExpandEnv(strings.TrimSpace(v[1]))
 	}
 	//printDirs(g, *sKeys)
 
 	if v, ok := g[*key]; ok {
 		//check whether jumppath exists
-		if !Exists(v) {
+		if !strings.HasPrefix(v, "http") && !Exists(v) {
 			fmt.Fprintf(os.Stderr, "%s does not exist.\nFix config: %s\n", v, *filePath)
 			os.Exit(1)
 		} else {
